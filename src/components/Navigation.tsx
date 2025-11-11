@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, Wallet, Search } from "lucide-react";
+import { Menu, X, Search, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 
@@ -47,9 +47,11 @@ const Navigation = () => {
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <Search className="h-5 w-5" />
             </Button>
-            <Button variant="hero" size="sm" className="hidden sm:flex">
-              <Wallet className="h-4 w-4" />
-              <span>Connect Wallet</span>
+            <Button variant="hero" size="sm" className="hidden sm:flex" asChild>
+              <Link to="/auth">
+                <LogIn className="h-4 w-4" />
+                <span>Đăng nhập</span>
+              </Link>
             </Button>
 
             {/* Mobile Menu Button */}
@@ -78,9 +80,11 @@ const Navigation = () => {
                   {link.name}
                 </Link>
               ))}
-              <Button variant="hero" className="w-full">
-                <Wallet className="h-4 w-4" />
-                <span>Connect Wallet</span>
+              <Button variant="hero" className="w-full" asChild>
+                <Link to="/auth">
+                  <LogIn className="h-4 w-4" />
+                  <span>Đăng nhập</span>
+                </Link>
               </Button>
             </div>
           </div>

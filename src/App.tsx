@@ -10,6 +10,7 @@ import Marketplace from "./pages/Marketplace";
 import Citizenship from "./pages/Citizenship";
 import Ecosystem from "./pages/Ecosystem";
 import About from "./pages/About";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/citizenship" element={<Citizenship />} />
           <Route path="/ecosystem" element={<Ecosystem />} />
           <Route path="/about" element={<About />} />
+          <Route path="/auth" element={<Auth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
