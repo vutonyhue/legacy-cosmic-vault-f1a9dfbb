@@ -24,7 +24,7 @@ const Navigation = () => {
           <Link to="/" className="flex items-center gap-3 animate-glow">
             <img src={logo} alt="F.U.Profile Logo" className="h-10 w-10" />
             <span className="text-xl font-bold text-gradient hidden sm:block">
-              F.U.Profile
+              F.U.Profilevu
             </span>
           </Link>
 
