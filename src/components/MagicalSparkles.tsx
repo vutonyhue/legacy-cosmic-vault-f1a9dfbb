@@ -35,8 +35,8 @@ export const MagicalSparkles = () => {
             top: `${sparkle.y}%`,
             width: `${sparkle.size}px`,
             height: `${sparkle.size}px`,
-            background: "radial-gradient(circle, #fbbf24 0%, #f59e0b 50%, transparent 100%)",
-            boxShadow: "0 0 10px #fbbf24, 0 0 20px #f59e0b",
+            background: "radial-gradient(circle, #10b981 0%, #059669 50%, transparent 100%)",
+            boxShadow: "0 0 10px #10b981, 0 0 20px #059669",
             animationDelay: `${sparkle.delay}s`,
             animationDuration: `${sparkle.duration}s`,
           }}

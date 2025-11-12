@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { Feed3DBackground } from "@/components/Feed3DBackground";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -73,13 +74,14 @@ const Feed = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <Feed3DBackground />
       <Navigation />
       
-      <main className="flex-1 container mx-auto px-4 pt-24 pb-16">
+      <main className="flex-1 container mx-auto px-4 pt-24 pb-16 relative z-10">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Create Post Section */}
-          <Card className="glass border-border/50">
+          <Card className="glass border-border/50 hover-lift backdrop-blur-xl bg-card/70" style={{ boxShadow: 'var(--shadow-glow), var(--shadow-card)' }}>
             <CardHeader>
               <h2 className="text-2xl font-bold text-gradient">Share Your Story</h2>
             </CardHeader>
@@ -117,7 +119,7 @@ const Feed = () => {
           {/* Feed Posts */}
           <div className="space-y-4">
             {posts.map((post) => (
-              <Card key={post.id} className="glass border-border/50 animate-fade-in">
+              <Card key={post.id} className="glass border-border/50 animate-fade-in hover-lift backdrop-blur-xl bg-card/70" style={{ boxShadow: 'var(--shadow-glow), var(--shadow-card)' }}>
                 <CardContent className="pt-6">
                   {/* Post Header */}
                   <div className="flex items-center gap-3 mb-4">
