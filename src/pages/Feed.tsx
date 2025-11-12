@@ -25,6 +25,15 @@ const Feed = () => {
   const [posts, setPosts] = useState<Post[]>([
     {
       id: "1",
+      author: "Nguyễn Văn Minh",
+      avatar: "/placeholder.svg",
+      content: "Chào mọi người! Mình vừa tạo NFT đầu tiên trên F.U.Profile. Cảm giác thật tuyệt vời khi có thể lưu giữ những khoảnh khắc đáng nhớ mãi mãi trên blockchain. Công nghệ này thực sự đỉnh cao! 🚀✨ Ai cũng nên thử nhé! 💚",
+      likes: 124,
+      comments: 18,
+      timestamp: "1 giờ trước",
+    },
+    {
+      id: "2",
       author: "Alex Nguyen",
       avatar: "/placeholder.svg",
       content: "Just minted my first NFT on F.U.Profile! This platform is amazing for preserving life moments forever on blockchain. 🚀",
@@ -33,7 +42,17 @@ const Feed = () => {
       timestamp: "2 hours ago",
     },
     {
-      id: "2",
+      id: "3",
+      author: "Trần Thị Hương",
+      avatar: "/placeholder.svg",
+      content: "Kỷ niệm 10 năm ngày cưới của vợ chồng mình! 💍💕 Đã upload tất cả ảnh cưới và những khoảnh khắc hạnh phúc lên blockchain. Cảm ơn F.U.Profile đã giúp chúng mình lưu giữ kỷ niệm này mãi mãi. Yêu thương và biết ơn! 🌸",
+      media: { type: "image", url: "/placeholder.svg" },
+      likes: 256,
+      comments: 42,
+      timestamp: "3 giờ trước",
+    },
+    {
+      id: "4",
       author: "Sarah Chen",
       avatar: "/placeholder.svg",
       content: "Celebrating 10 years in business! Uploaded all our company milestones to the blockchain. Thanks F.U.Profile for making digital legacy possible.",
