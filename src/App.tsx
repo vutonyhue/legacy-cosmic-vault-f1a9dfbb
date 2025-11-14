@@ -16,6 +16,8 @@ import Auth from "./pages/Auth";
 import Feed from "./pages/Feed";
 import Profile from "./pages/Profile";
 import Wallet from "./pages/Wallet";
+import Friends from "./pages/Friends";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +39,8 @@ const App = () => (
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:userId" element={<Profile />} />
                     <Route path="/wallet" element={<Wallet />} />
+                    <Route path="/friends" element={<Friends />} />
+                    <Route path="/messages" element={<Messages />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BrowserRouter>
