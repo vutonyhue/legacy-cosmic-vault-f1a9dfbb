@@ -32,12 +32,8 @@ const Auth = () => {
           <img 
             src="/fun-profile-logo.jpg" 
             alt="FUN Profile" 
-            className="w-24 h-24 mx-auto mb-4 rounded-full"
+            className="w-24 h-24 mx-auto rounded-full ring-4 ring-primary/30"
           />
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            FUN Profile
-          </h1>
-          <p className="text-muted-foreground">Connect. Share. Earn.</p>
         </div>
         <AuthForm />
       </div>
