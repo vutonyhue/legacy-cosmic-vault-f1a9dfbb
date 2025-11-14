@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { Home, User, Wallet, LogOut, LogIn, Moon, Sun } from 'lucide-react';
+import { Home, User, Wallet, LogOut, LogIn, Moon, Sun, Users, MessageSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { NotificationDropdown } from './NotificationDropdown';
 import { SearchDialog } from './SearchDialog';
@@ -56,6 +56,14 @@ export const Navbar = () => {
               <Home className="w-4 h-4 mr-2" />
               Feed
             </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/friends')}>
+              <Users className="w-4 h-4 mr-2" />
+              Bạn bè
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/messages')}>
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Tin nhắn
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/profile')}>
               <User className="w-4 h-4 mr-2" />
               Profile
@@ -70,6 +78,12 @@ export const Navbar = () => {
           <div className="md:hidden flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/')}>
               <Home className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/friends')}>
+              <Users className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/messages')}>
+              <MessageSquare className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/profile')}>
               <User className="w-4 h-4" />
