@@ -7,6 +7,7 @@ import { PostCard } from '@/components/feed/PostCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HonorBoard } from '@/components/feed/HonorBoard';
 import { LeftSidebar } from '@/components/feed/LeftSidebar';
+import { StorageStats } from '@/components/admin/StorageStats';
 
 const Feed = () => {
   const navigate = useNavigate();
@@ -71,7 +72,14 @@ const Feed = () => {
 
           {/* Main Feed */}
           <main className="max-w-2xl mx-auto w-full">
-            {currentUserId && <CreatePost onPostCreated={fetchPosts} />}
+            {currentUserId && (
+              <>
+                <div className="mb-4">
+                  <StorageStats />
+                </div>
+                <CreatePost onPostCreated={fetchPosts} />
+              </>
+            )}
             
             {!currentUserId && (
               <div className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-lg text-center">
