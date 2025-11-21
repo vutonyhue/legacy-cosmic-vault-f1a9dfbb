@@ -105,11 +105,14 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
         videoUrl = publicUrl;
       }
 
+      const mediaUrl = imageUrl || videoUrl;
+      const mediaType = imageUrl ? 'image' : videoUrl ? 'video' : null;
+
       const { error } = await supabase.from('posts').insert({
         user_id: user.id,
         content: content.trim() || '',
-        image_url: imageUrl,
-        video_url: videoUrl,
+        media_url: mediaUrl,
+        media_type: mediaType,
       });
 
       if (error) throw error;
