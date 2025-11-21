@@ -39,12 +39,12 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       .from("friendships")
       .select(`
         id,
-        user_id,
-        friend_id,
-        profiles!friendships_friend_id_fkey(id, username, full_name, avatar_url)
+        requester_id,
+        addressee_id,
+        profiles!friendships_addressee_id_fkey(id, username, full_name, avatar_url)
       `)
       .eq("status", "accepted")
-      .eq("user_id", userId);
+      .eq("requester_id", userId);
 
     if (error) {
       console.error("Error fetching friends:", error);
@@ -55,12 +55,12 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       .from("friendships")
       .select(`
         id,
-        user_id,
-        friend_id,
-        profiles!friendships_user_id_fkey(id, username, full_name, avatar_url)
+        requester_id,
+        addressee_id,
+        profiles!friendships_requester_id_fkey(id, username, full_name, avatar_url)
       `)
       .eq("status", "accepted")
-      .eq("friend_id", userId);
+      .eq("addressee_id", userId);
 
     const friendsList: Friend[] = [];
     
@@ -99,11 +99,11 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       .from("friendships")
       .select(`
         id,
-        user_id,
-        profiles!friendships_user_id_fkey(id, username, full_name, avatar_url)
+        requester_id,
+        profiles!friendships_requester_id_fkey(id, username, full_name, avatar_url)
       `)
       .eq("status", "pending")
-      .eq("friend_id", userId);
+      .eq("addressee_id", userId);
 
     if (error) {
       console.error("Error fetching pending requests:", error);
@@ -126,11 +126,11 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       .from("friendships")
       .select(`
         id,
-        friend_id,
-        profiles!friendships_friend_id_fkey(id, username, full_name, avatar_url)
+        addressee_id,
+        profiles!friendships_addressee_id_fkey(id, username, full_name, avatar_url)
       `)
       .eq("status", "pending")
-      .eq("user_id", userId);
+      .eq("requester_id", userId);
 
     if (error) {
       console.error("Error fetching sent requests:", error);

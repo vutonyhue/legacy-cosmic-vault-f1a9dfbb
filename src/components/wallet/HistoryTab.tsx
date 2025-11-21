@@ -13,8 +13,7 @@ interface Transaction {
   from_address: string;
   to_address: string;
   amount: string;
-  token_symbol: string;
-  chain_id: number;
+  token: string;
   status: string;
   created_at: string;
 }
@@ -54,17 +53,12 @@ export const HistoryTab = () => {
     loadTransactions();
   }, [address]);
 
-  const getExplorerUrl = (txHash: string, chainId: number) => {
-    if (chainId === 1) {
-      return `https://etherscan.io/tx/${txHash}`;
-    } else if (chainId === 56) {
-      return `https://bscscan.com/tx/${txHash}`;
-    }
-    return '#';
+  const getExplorerUrl = (txHash: string) => {
+    return `https://etherscan.io/tx/${txHash}`;
   };
 
-  const getExplorerName = (chainId: number) => {
-    return chainId === 1 ? 'Etherscan' : 'BscScan';
+  const getExplorerName = () => {
+    return 'Etherscan';
   };
 
   return (
@@ -85,7 +79,7 @@ export const HistoryTab = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="font-medium">
-                    {tx.from_address.toLowerCase() === address?.toLowerCase() ? 'Đã gửi' : 'Đã nhận'} {tx.amount} {tx.token_symbol}
+                    {tx.from_address.toLowerCase() === address?.toLowerCase() ? 'Đã gửi' : 'Đã nhận'} {tx.amount} {tx.token}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {tx.from_address.toLowerCase() === address?.toLowerCase() 
@@ -100,7 +94,7 @@ export const HistoryTab = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => window.open(getExplorerUrl(tx.tx_hash, tx.chain_id), '_blank')}
+                  onClick={() => window.open(getExplorerUrl(tx.tx_hash), '_blank')}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>
@@ -124,9 +118,9 @@ export const HistoryTab = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(getExplorerUrl('', chainId), '_blank')}
+              onClick={() => window.open('https://etherscan.io', '_blank')}
             >
-              Xem chi tiết trên {getExplorerName(chainId)}
+              Xem chi tiết trên {getExplorerName()}
             </Button>
           </div>
         )}
