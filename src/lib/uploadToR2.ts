@@ -1,19 +1,27 @@
-export async function uploadFileToR2(file: File, userId: string, folder: string) {
+// src/lib/uploadToR2.ts
+
+export async function uploadFileToR2(
+  file: File,
+  userId: string,
+  folder: string
+) {
+  // Tạo tên file an toàn
   const safeName = file.name.replace(/\s+/g, "-").toLowerCase();
   const filename = `${folder}/${userId}-${crypto.randomUUID()}-${safeName}`;
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("filename", filename);
+  const params = new URLSearchParams({
+    filename,
+    contentType: file.type || "application/octet-stream",
+  });
 
-  const res = await fetch("/api/upload-to-r2", {
+  const res = await fetch(`/api/upload-to-r2?${params.toString()}`, {
     method: "POST",
-    body: formData,
+    body: file, // gửi RAW file, không dùng FormData
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error("Upload failed: " + err);
+    const text = await res.text();
+    throw new Error(`Upload failed: ${res.status} ${text}`);
   }
 
   const json = await res.json();
