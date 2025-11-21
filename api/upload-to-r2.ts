@@ -36,9 +36,20 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Server configuration error - missing R2 credentials" });
     }
 
+    const endpoint = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+    
+    console.log("R2 Upload attempt:", {
+      endpoint,
+      bucket: R2_BUCKET_NAME,
+      fileName,
+      fileType,
+      hasAccessKey: !!R2_ACCESS_KEY_ID,
+      hasSecretKey: !!R2_SECRET_ACCESS_KEY
+    });
+
     const client = new S3Client({
       region: "auto",
-      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      endpoint,
       credentials: {
         accessKeyId: R2_ACCESS_KEY_ID,
         secretAccessKey: R2_SECRET_ACCESS_KEY,
@@ -52,7 +63,19 @@ export default async function handler(req, res) {
       ContentType: fileType,
     });
 
-    await client.send(upload);
+    try {
+      await client.send(upload);
+      console.log("R2 Upload successful:", fileName);
+    } catch (uploadError) {
+      console.error("R2 Upload error details:", {
+        error: uploadError.message,
+        code: uploadError.Code,
+        statusCode: uploadError.$metadata?.httpStatusCode,
+        bucket: R2_BUCKET_NAME,
+        endpoint
+      });
+      throw uploadError;
+    }
 
     const publicUrl = `${R2_PUBLIC_BASE_URL}/${fileName}`;
 
