@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+
 import { S3Client, PutObjectCommand } from "https://esm.sh/@aws-sdk/client-s3@3";
 
 const corsHeaders = {
@@ -13,21 +13,38 @@ serve(async (req) => {
   }
 
   try {
-    // Get authenticated user
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const authHeader = req.headers.get('Authorization')!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Get authenticated user id from JWT (Edge Function already validates the token)
+    const authHeader = req.headers.get('Authorization') || '';
+    if (!authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const token = authHeader.replace('Bearer ', '');
+    let userId: string | null = null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] || ''));
+
+      // Supabase JWT typically uses `sub` as the user id
+      userId =
+        (payload.sub as string | undefined) ??
+        (payload.user_id as string | undefined) ??
+        (payload.id as string | undefined) ??
+        null;
+    } catch (e) {
+      console.error('Failed to decode JWT in r2-upload:', e);
+    }
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
 
     // Get R2 credentials from environment
     const accountId = Deno.env.get('R2_ACCOUNT_ID');
@@ -55,7 +72,7 @@ serve(async (req) => {
 
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+    const fileName = `${userId}/${crypto.randomUUID()}.${fileExt}`;
 
     // Initialize S3 client for R2
     const s3Client = new S3Client({
