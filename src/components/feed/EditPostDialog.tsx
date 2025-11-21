@@ -10,8 +10,8 @@ interface EditPostDialogProps {
   post: {
     id: string;
     content: string;
-    image_url: string | null;
-    video_url?: string | null;
+    media_url: string | null;
+    media_type: string | null;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -22,8 +22,10 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
   const [content, setContent] = useState(post.content);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(post.image_url);
-  const [videoPreview, setVideoPreview] = useState<string | null>(post.video_url);
+  const initialImagePreview = post.media_type === 'image' ? post.media_url : null;
+  const initialVideoPreview = post.media_type === 'video' ? post.media_url : null;
+  const [imagePreview, setImagePreview] = useState<string | null>(initialImagePreview);
+  const [videoPreview, setVideoPreview] = useState<string | null>(initialVideoPreview);
   const [loading, setLoading] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,8 +71,15 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
 
     setLoading(true);
     try {
-      let imageUrl = imagePreview;
-      let videoUrl = videoPreview;
+      // Determine current media based on previews
+      let mediaUrl: string | null =
+        imagePreview && !videoPreview ? imagePreview :
+        videoPreview && !imagePreview ? videoPreview :
+        null;
+      let mediaType: string | null =
+        imagePreview && !videoPreview ? 'image' :
+        videoPreview && !imagePreview ? 'video' :
+        null;
 
       // Upload new image if selected
       if (imageFile) {
@@ -85,7 +94,8 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
 
         if (uploadError) throw uploadError;
         const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
-        imageUrl = publicUrl;
+        mediaUrl = publicUrl;
+        mediaType = 'image';
       }
 
       // Upload new video if selected
@@ -101,16 +111,16 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
 
         if (uploadError) throw uploadError;
         const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
-        videoUrl = publicUrl;
+        mediaUrl = publicUrl;
+        mediaType = 'video';
       }
 
-      // Update post
       const { error } = await supabase
         .from('posts')
         .update({
           content,
-          image_url: imageUrl,
-          video_url: videoUrl,
+          media_url: mediaUrl,
+          media_type: mediaUrl ? mediaType : null,
         })
         .eq('id', post.id);
 
