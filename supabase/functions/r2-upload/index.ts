@@ -26,9 +26,15 @@ async function hmacSha256(key: ArrayBuffer | Uint8Array, data: string): Promise<
   return await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
 }
 
-function toUint8Array(buffer: ArrayBuffer): Uint8Array {
+function toUint8Array(buffer: ArrayBuffer | Uint8Array): Uint8Array {
   return buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
 }
+
+function bufferToHex(buffer: ArrayBuffer | Uint8Array): string {
+  const bytes = toUint8Array(buffer);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 
 async function signR2Request(params: {
   method: string;
@@ -84,11 +90,9 @@ async function signR2Request(params: {
   const kService = await hmacSha256(kRegion, service);
   const kSigning = await hmacSha256(kService, "aws4_request");
 
-  const signature = await sha256Hex(
-    toUint8Array(
-      await hmacSha256(kSigning, stringToSign),
-    ),
-  );
+  const signatureBytes = await hmacSha256(kSigning, stringToSign);
+  const signature = bufferToHex(signatureBytes);
+
 
   const authorizationHeader =
     `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
