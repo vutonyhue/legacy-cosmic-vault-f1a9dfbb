@@ -1,58 +1,47 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-
+// 🚨 BẮT BUỘC: Dùng Node.js runtime để AWS SDK chạy được
 export const config = {
-  runtime: "edge",
+  runtime: "nodejs",
 };
 
-export default async function handler(request: Request) {
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   try {
-    const form = await request.formData();
-    const file = form.get("file") as File | null;
-    const filename = form.get("filename") as string | null;
+    const { fileName, fileType } = req.query;
+    const file = req.body;
 
-    if (!file || !filename) {
-      return new Response(JSON.stringify({ error: "Missing file or filename" }), {
-        status: 400,
-      });
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
     }
-
-    const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!;
-    const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!;
-    const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!;
-    const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME!;
-    const R2_PUBLIC_BASE_URL = process.env.R2_PUBLIC_BASE_URL!;
 
     const client = new S3Client({
       region: "auto",
-      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
       credentials: {
-        accessKeyId: R2_ACCESS_KEY_ID,
-        secretAccessKey: R2_SECRET_ACCESS_KEY,
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
       },
     });
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    await client.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: filename,
-        Body: buffer,
-        ContentType: file.type,
-      })
-    );
-
-    const publicUrl = `${R2_PUBLIC_BASE_URL}/${filename}`;
-
-    return new Response(JSON.stringify({ publicUrl }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+    const upload = new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: fileName,
+      Body: Buffer.from(file, "base64"),
+      ContentType: fileType,
     });
-  } catch (err: any) {
-    console.error(err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-    });
+
+    await client.send(upload);
+
+    const publicUrl = `${process.env.R2_PUBLIC_BASE}/${fileName}`;
+
+    return res.status(200).json({ url: publicUrl });
+
+  } catch (err) {
+    console.error("Upload error:", err);
+    return res.status(500).json({ error: "Upload failed", details: err.message });
   }
 }
