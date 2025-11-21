@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
 import { AvatarCropper } from './AvatarCropper';
+import { uploadFileToR2 } from '@/lib/uploadToR2';
 
 export const EditProfile = () => {
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,9 @@ export const EditProfile = () => {
 
   const fetchProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       setUserId(user.id);
@@ -84,18 +87,15 @@ export const EditProfile = () => {
 
       if (!userId) throw new Error('No user found');
 
-      const fileExt = 'jpg';
-      const filePath = `${userId}/${crypto.randomUUID()}.${fileExt}`;
+      // Chuyển Blob thành File để upload
+      const file = new File(
+        [croppedImageBlob],
+        `avatar-${userId}-${crypto.randomUUID()}.jpg`,
+        { type: 'image/jpeg' }
+      );
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, croppedImageBlob);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      // Upload avatar lên Cloudflare R2 (folder "avatars")
+      const publicUrl = await uploadFileToR2(file, userId, 'avatars');
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -133,18 +133,8 @@ export const EditProfile = () => {
 
       if (!userId) throw new Error('No user found');
 
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${userId}/${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      // Upload cover lên Cloudflare R2 (folder "covers")
+      const publicUrl = await uploadFileToR2(file, userId, 'covers');
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -203,9 +193,9 @@ export const EditProfile = () => {
         <div className="relative">
           {coverUrl && (
             <div className="w-full h-48 bg-gradient-to-r from-primary/20 to-primary-glow/20">
-              <img 
-                src={coverUrl} 
-                alt="Cover" 
+              <img
+                src={coverUrl}
+                alt="Cover"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -215,7 +205,13 @@ export const EditProfile = () => {
           )}
           <div className="absolute top-4 right-4">
             <Label htmlFor="cover" className="cursor-pointer">
-              <Button type="button" variant="secondary" size="sm" disabled={uploadingCover} asChild>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={uploadingCover}
+                asChild
+              >
                 <span>
                   <Upload className="w-4 h-4 mr-2" />
                   {uploadingCover ? 'Đang tải...' : 'Đổi ảnh bìa'}
@@ -291,7 +287,9 @@ export const EditProfile = () => {
                 rows={4}
                 maxLength={120}
               />
-              <p className="text-xs text-muted-foreground">{bio.length}/120 ký tự</p>
+              <p className="text-xs text-muted-foreground">
+                {bio.length}/120 ký tự
+              </p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Đang cập nhật...' : 'Cập nhật hồ sơ'}
