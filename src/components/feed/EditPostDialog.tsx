@@ -81,31 +81,37 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
         videoPreview && !imagePreview ? 'video' :
         null;
 
-      // Upload new image to R2 if selected
+      // Upload new image if selected
       if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
-        const { data, error } = await supabase.functions.invoke('upload-to-r2', {
-          body: formData,
-        });
+        const fileExt = imageFile.name.split('.').pop()?.toLowerCase();
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('feed-media')
+          .upload(fileName, imageFile);
 
-        if (error) throw error;
-        mediaUrl = data.url;
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
+        mediaUrl = publicUrl;
         mediaType = 'image';
       }
 
-      // Upload new video to R2 if selected
+      // Upload new video if selected
       if (videoFile) {
-        const formData = new FormData();
-        formData.append('file', videoFile);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
-        const { data, error } = await supabase.functions.invoke('upload-to-r2', {
-          body: formData,
-        });
+        const fileExt = videoFile.name.split('.').pop()?.toLowerCase();
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('feed-media')
+          .upload(fileName, videoFile);
 
-        if (error) throw error;
-        mediaUrl = data.url;
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
+        mediaUrl = publicUrl;
         mediaType = 'video';
       }
 

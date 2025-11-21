@@ -69,31 +69,41 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       let mediaUrl = null;
       let mediaType = null;
 
-      // Upload image to R2 if present
+      // Upload image if present
       if (image) {
-        const formData = new FormData();
-        formData.append('file', image);
+        const fileExt = image.name.split('.').pop()?.toLowerCase();
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('feed-media')
+          .upload(fileName, image);
 
-        const { data, error } = await supabase.functions.invoke('upload-to-r2', {
-          body: formData,
-        });
+        if (uploadError) throw uploadError;
 
-        if (error) throw error;
-        mediaUrl = data.url;
+        const { data: { publicUrl } } = supabase.storage
+          .from('feed-media')
+          .getPublicUrl(fileName);
+        
+        mediaUrl = publicUrl;
         mediaType = 'image';
       }
 
-      // Upload video to R2 if present
+      // Upload video if present
       if (video) {
-        const formData = new FormData();
-        formData.append('file', video);
+        const fileExt = video.name.split('.').pop()?.toLowerCase();
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('feed-media')
+          .upload(fileName, video);
 
-        const { data, error } = await supabase.functions.invoke('upload-to-r2', {
-          body: formData,
-        });
+        if (uploadError) throw uploadError;
 
-        if (error) throw error;
-        mediaUrl = data.url;
+        const { data: { publicUrl } } = supabase.storage
+          .from('feed-media')
+          .getPublicUrl(fileName);
+        
+        mediaUrl = publicUrl;
         mediaType = 'video';
       }
 
