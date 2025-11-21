@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ImagePlus, Video, X, Loader2 } from 'lucide-react';
+import { uploadToR2 } from '@/utils/r2Storage';
 
 interface CreatePostProps {
   onPostCreated: () => void;
@@ -69,40 +70,16 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       let imageUrl = null;
       let videoUrl = null;
 
-      // Upload image if present
+      // Upload image to R2 if present
       if (image) {
-        const fileExt = image.name.split('.').pop()?.toLowerCase();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('posts')
-          .upload(fileName, image);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('posts')
-          .getPublicUrl(fileName);
-        
-        imageUrl = publicUrl;
+        const result = await uploadToR2(image, 'image');
+        imageUrl = result.publicUrl;
       }
 
-      // Upload video if present
+      // Upload video to R2 if present
       if (video) {
-        const fileExt = video.name.split('.').pop()?.toLowerCase();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('videos')
-          .upload(fileName, video);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('videos')
-          .getPublicUrl(fileName);
-        
-        videoUrl = publicUrl;
+        const result = await uploadToR2(video, 'video');
+        videoUrl = result.publicUrl;
       }
 
       const mediaUrl = imageUrl || videoUrl;

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Image, Video, X } from 'lucide-react';
+import { uploadToR2 } from '@/utils/r2Storage';
 
 interface EditPostDialogProps {
   post: {
@@ -76,36 +77,16 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
       let imageUrl = imagePreview;
       let videoUrl = videoPreview;
 
-      // Upload new image if selected
+      // Upload new image to R2 if selected
       if (imageFile) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-        
-        const fileExt = imageFile.name.split('.').pop()?.toLowerCase();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        const { error: uploadError, data } = await supabase.storage
-          .from('posts')
-          .upload(fileName, imageFile);
-
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(fileName);
-        imageUrl = publicUrl;
+        const result = await uploadToR2(imageFile, 'image');
+        imageUrl = result.publicUrl;
       }
 
-      // Upload new video if selected
+      // Upload new video to R2 if selected
       if (videoFile) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-        
-        const fileExt = videoFile.name.split('.').pop()?.toLowerCase();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('videos')
-          .upload(fileName, videoFile);
-
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
-        videoUrl = publicUrl;
+        const result = await uploadToR2(videoFile, 'video');
+        videoUrl = result.publicUrl;
       }
 
       // Update post
