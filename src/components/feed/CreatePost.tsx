@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ImagePlus, Video, X, Loader2 } from 'lucide-react';
-import { uploadToR2 } from '@/utils/r2Storage';
 
 interface CreatePostProps {
   onPostCreated: () => void;
@@ -70,26 +69,47 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       let imageUrl = null;
       let videoUrl = null;
 
-      // Upload image to R2 if present
+      // Upload image if present
       if (image) {
-        const result = await uploadToR2(image, 'image');
-        imageUrl = result.publicUrl;
+        const fileExt = image.name.split('.').pop()?.toLowerCase();
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('posts')
+          .upload(fileName, image);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('posts')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
       }
 
-      // Upload video to R2 if present
+      // Upload video if present
       if (video) {
-        const result = await uploadToR2(video, 'video');
-        videoUrl = result.publicUrl;
-      }
+        const fileExt = video.name.split('.').pop()?.toLowerCase();
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('videos')
+          .upload(fileName, video);
 
-      const mediaUrl = imageUrl || videoUrl;
-      const mediaType = imageUrl ? 'image' : videoUrl ? 'video' : null;
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('videos')
+          .getPublicUrl(fileName);
+        
+        videoUrl = publicUrl;
+      }
 
       const { error } = await supabase.from('posts').insert({
         user_id: user.id,
         content: content.trim() || '',
-        media_url: mediaUrl,
-        media_type: mediaType,
+        image_url: imageUrl,
+        video_url: videoUrl,
       });
 
       if (error) throw error;

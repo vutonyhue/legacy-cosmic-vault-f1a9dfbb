@@ -32,6 +32,29 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
     fetchFriends();
     fetchPendingRequests();
     fetchSentRequests();
+    
+    // Set up realtime subscription for friendships
+    const channel = supabase
+      .channel('friendships-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'friendships'
+        },
+        () => {
+          // Refetch all data when friendships change
+          fetchFriends();
+          fetchPendingRequests();
+          fetchSentRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   const fetchFriends = async () => {
@@ -39,12 +62,12 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       .from("friendships")
       .select(`
         id,
-        requester_id,
-        addressee_id,
-        profiles!friendships_addressee_id_fkey(id, username, full_name, avatar_url)
+        user_id,
+        friend_id,
+        profiles!friendships_friend_id_fkey(id, username, full_name, avatar_url)
       `)
       .eq("status", "accepted")
-      .eq("requester_id", userId);
+      .eq("user_id", userId);
 
     if (error) {
       console.error("Error fetching friends:", error);
@@ -55,12 +78,12 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       .from("friendships")
       .select(`
         id,
-        requester_id,
-        addressee_id,
-        profiles!friendships_requester_id_fkey(id, username, full_name, avatar_url)
+        user_id,
+        friend_id,
+        profiles!friendships_user_id_fkey(id, username, full_name, avatar_url)
       `)
       .eq("status", "accepted")
-      .eq("addressee_id", userId);
+      .eq("friend_id", userId);
 
     const friendsList: Friend[] = [];
     
@@ -99,11 +122,11 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       .from("friendships")
       .select(`
         id,
-        requester_id,
-        profiles!friendships_requester_id_fkey(id, username, full_name, avatar_url)
+        user_id,
+        profiles!friendships_user_id_fkey(id, username, full_name, avatar_url)
       `)
       .eq("status", "pending")
-      .eq("addressee_id", userId);
+      .eq("friend_id", userId);
 
     if (error) {
       console.error("Error fetching pending requests:", error);
@@ -126,11 +149,11 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       .from("friendships")
       .select(`
         id,
-        addressee_id,
-        profiles!friendships_addressee_id_fkey(id, username, full_name, avatar_url)
+        friend_id,
+        profiles!friendships_friend_id_fkey(id, username, full_name, avatar_url)
       `)
       .eq("status", "pending")
-      .eq("requester_id", userId);
+      .eq("user_id", userId);
 
     if (error) {
       console.error("Error fetching sent requests:", error);

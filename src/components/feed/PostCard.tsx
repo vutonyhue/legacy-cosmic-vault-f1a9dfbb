@@ -15,8 +15,8 @@ interface PostCardProps {
   post: {
     id: string;
     content: string;
-    media_url: string | null;
-    media_type?: string | null;
+    image_url: string | null;
+    video_url?: string | null;
     created_at: string;
     user_id: string;
     profiles: {
@@ -104,7 +104,7 @@ export const PostCard = ({ post, currentUserId, onPostDeleted }: PostCardProps) 
         <CardHeader className="flex flex-row items-center gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-6">
           <Avatar className="cursor-pointer w-8 h-8 sm:w-10 sm:h-10" onClick={handleProfileClick}>
             {post.profiles.avatar_url && <AvatarImage src={post.profiles.avatar_url} />}
-            <AvatarFallback>{post.profiles.username[0].toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{post.profiles.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <h3 
@@ -121,27 +121,27 @@ export const PostCard = ({ post, currentUserId, onPostDeleted }: PostCardProps) 
         <CardContent className="space-y-4 px-4 sm:px-6">
           {post.content && <p className="whitespace-pre-wrap text-sm sm:text-base break-words">{post.content}</p>}
           
-          {post.media_url && post.media_type === 'image' && (
+          {post.image_url && (
             <>
               <img
-                src={post.media_url}
+                src={post.image_url}
                 alt="Post"
                 className="w-full max-w-[1920px] max-h-[1920px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity object-contain mx-auto"
                 onClick={() => setShowImageViewer(true)}
               />
               <ImageViewer
-                imageUrl={post.media_url}
+                imageUrl={post.image_url}
                 isOpen={showImageViewer}
                 onClose={() => setShowImageViewer(false)}
               />
             </>
           )}
 
-          {post.media_url && post.media_type === 'video' && (
+          {post.video_url && (
             <video
               controls
               className="w-full max-w-[1920px] rounded-lg mx-auto"
-              src={post.media_url}
+              src={post.video_url}
             >
               Your browser does not support video playback.
             </video>

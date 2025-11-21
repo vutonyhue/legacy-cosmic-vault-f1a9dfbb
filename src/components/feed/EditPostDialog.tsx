@@ -5,14 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Image, Video, X } from 'lucide-react';
-import { uploadToR2 } from '@/utils/r2Storage';
 
 interface EditPostDialogProps {
   post: {
     id: string;
     content: string;
-    media_url: string | null;
-    media_type?: string | null;
+    image_url: string | null;
+    video_url?: string | null;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -23,12 +22,8 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
   const [content, setContent] = useState(post.content);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    post.media_type === 'image' ? post.media_url : null
-  );
-  const [videoPreview, setVideoPreview] = useState<string | null>(
-    post.media_type === 'video' ? post.media_url : null
-  );
+  const [imagePreview, setImagePreview] = useState<string | null>(post.image_url);
+  const [videoPreview, setVideoPreview] = useState<string | null>(post.video_url);
   const [loading, setLoading] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,28 +72,45 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
       let imageUrl = imagePreview;
       let videoUrl = videoPreview;
 
-      // Upload new image to R2 if selected
+      // Upload new image if selected
       if (imageFile) {
-        const result = await uploadToR2(imageFile, 'image');
-        imageUrl = result.publicUrl;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+        
+        const fileExt = imageFile.name.split('.').pop()?.toLowerCase();
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        const { error: uploadError, data } = await supabase.storage
+          .from('posts')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(fileName);
+        imageUrl = publicUrl;
       }
 
-      // Upload new video to R2 if selected
+      // Upload new video if selected
       if (videoFile) {
-        const result = await uploadToR2(videoFile, 'video');
-        videoUrl = result.publicUrl;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+        
+        const fileExt = videoFile.name.split('.').pop()?.toLowerCase();
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('videos')
+          .upload(fileName, videoFile);
+
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
+        videoUrl = publicUrl;
       }
 
       // Update post
-      const mediaUrl = imageUrl || videoUrl;
-      const mediaType = imageUrl ? 'image' : videoUrl ? 'video' : null;
-
       const { error } = await supabase
         .from('posts')
         .update({
           content,
-          media_url: mediaUrl,
-          media_type: mediaType,
+          image_url: imageUrl,
+          video_url: videoUrl,
         })
         .eq('id', post.id);
 

@@ -118,11 +118,11 @@ return (
           
           {/* User info */}
           <div className="flex items-center justify-center gap-3">
-            <h2 className="text-white text-xl font-bold tracking-wide">{username.toUpperCase()}</h2>
+            <h2 className="text-white text-xl font-bold tracking-wide">{username?.toUpperCase() || 'USER'}</h2>
             <Avatar className="w-12 h-12 border-3 border-yellow-400">
               <AvatarImage src={avatarUrl} />
               <AvatarFallback className="bg-yellow-500 text-black font-bold">
-                {username?.[0]?.toUpperCase()}
+                {username?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
           </div>
