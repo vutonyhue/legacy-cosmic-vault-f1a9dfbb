@@ -18,17 +18,35 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
+    // Validate environment variables
+    const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+    const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+    const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+    const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
+    const R2_PUBLIC_BASE_URL = process.env.R2_PUBLIC_BASE_URL;
+
+    if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME || !R2_PUBLIC_BASE_URL) {
+      console.error("Missing R2 environment variables:", {
+        hasAccountId: !!R2_ACCOUNT_ID,
+        hasAccessKey: !!R2_ACCESS_KEY_ID,
+        hasSecretKey: !!R2_SECRET_ACCESS_KEY,
+        hasBucketName: !!R2_BUCKET_NAME,
+        hasPublicUrl: !!R2_PUBLIC_BASE_URL
+      });
+      return res.status(500).json({ error: "Server configuration error - missing R2 credentials" });
+    }
+
     const client = new S3Client({
       region: "auto",
-      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
       credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
       },
     });
 
     const upload = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
+      Bucket: R2_BUCKET_NAME,
       Key: fileName,
       Body: Buffer.from(file, "base64"),
       ContentType: fileType,
@@ -36,7 +54,7 @@ export default async function handler(req, res) {
 
     await client.send(upload);
 
-    const publicUrl = `${process.env.R2_PUBLIC_BASE_URL}/${fileName}`;
+    const publicUrl = `${R2_PUBLIC_BASE_URL}/${fileName}`;
 
     return res.status(200).json({ url: publicUrl });
 
