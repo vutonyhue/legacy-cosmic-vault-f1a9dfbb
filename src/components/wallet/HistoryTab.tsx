@@ -13,8 +13,7 @@ interface Transaction {
   from_address: string;
   to_address: string;
   amount: string;
-  token_symbol: string;
-  chain_id: number;
+  token: string;
   status: string;
   created_at: string;
 }
@@ -85,7 +84,7 @@ export const HistoryTab = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="font-medium">
-                    {tx.from_address.toLowerCase() === address?.toLowerCase() ? 'Đã gửi' : 'Đã nhận'} {tx.amount} {tx.token_symbol}
+                    {tx.from_address.toLowerCase() === address?.toLowerCase() ? 'Đã gửi' : 'Đã nhận'} {tx.amount} {tx.token}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {tx.from_address.toLowerCase() === address?.toLowerCase() 
@@ -100,7 +99,7 @@ export const HistoryTab = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => window.open(getExplorerUrl(tx.tx_hash, tx.chain_id), '_blank')}
+                  onClick={() => window.open(getExplorerUrl(tx.tx_hash, chainId), '_blank')}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>
