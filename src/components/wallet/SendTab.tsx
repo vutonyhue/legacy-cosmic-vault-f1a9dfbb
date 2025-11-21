@@ -56,8 +56,7 @@ export const SendTab = () => {
                 from_address: address,
                 to_address: recipient,
                 amount: amount,
-                token_symbol: nativeToken,
-                chain_id: chainId,
+                token: nativeToken,
                 status: 'pending'
               });
             }

@@ -23,8 +23,8 @@ export const FriendRequestButton = ({ userId, currentUserId }: FriendRequestButt
   const checkFriendshipStatus = async () => {
     const { data, error } = await supabase
       .from("friendships")
-      .select("id, user_id, friend_id, status")
-      .or(`and(user_id.eq.${currentUserId},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUserId})`)
+      .select("id, requester_id, addressee_id, status")
+      .or(`and(requester_id.eq.${currentUserId},addressee_id.eq.${userId}),and(requester_id.eq.${userId},addressee_id.eq.${currentUserId})`)
       .maybeSingle();
 
     if (error) {
@@ -39,7 +39,7 @@ export const FriendRequestButton = ({ userId, currentUserId }: FriendRequestButt
       setFriendshipId(data.id);
       if (data.status === "accepted") {
         setStatus("accepted");
-      } else if (data.user_id === currentUserId) {
+      } else if (data.requester_id === currentUserId) {
         setStatus("pending_sent");
       } else {
         setStatus("pending_received");
@@ -52,8 +52,8 @@ export const FriendRequestButton = ({ userId, currentUserId }: FriendRequestButt
     const { error } = await supabase
       .from("friendships")
       .insert({
-        user_id: currentUserId,
-        friend_id: userId,
+        requester_id: currentUserId,
+        addressee_id: userId,
         status: "pending"
       });
 
