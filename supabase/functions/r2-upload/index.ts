@@ -173,9 +173,9 @@ serve(async (req) => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${userId}/${crypto.randomUUID()}.${fileExt}`;
 
-    // Build R2 URL and payload
-    const bucketHost = `${bucketName}.${accountId}.r2.cloudflarestorage.com`;
-    const url = new URL(`https://${bucketHost}/${fileName}`);
+    // Build R2 API URL and payload (S3-compatible endpoint for uploads)
+    const apiHost = `${bucketName}.${accountId}.r2.cloudflarestorage.com`;
+    const url = new URL(`https://${apiHost}/${fileName}`);
 
     const arrayBuffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
@@ -209,7 +209,8 @@ serve(async (req) => {
       });
     }
 
-    const publicUrl = `https://${bucketHost}/${fileName}`;
+    // Public URL for serving media via R2.dev (bucket must allow public reads or be behind CDN/custom domain)
+    const publicUrl = `https://${bucketName}.${accountId}.r2.dev/${fileName}`;
 
     console.log("File uploaded successfully to R2:", fileName);
 
