@@ -81,37 +81,31 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
         videoPreview && !imagePreview ? 'video' :
         null;
 
-      // Upload new image if selected
+      // Upload new image to R2 if selected
       if (imageFile) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
+        const formData = new FormData();
+        formData.append('file', imageFile);
 
-        const fileExt = imageFile.name.split('.').pop()?.toLowerCase();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('feed-media')
-          .upload(fileName, imageFile);
+        const { data, error } = await supabase.functions.invoke('upload-to-r2', {
+          body: formData,
+        });
 
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
-        mediaUrl = publicUrl;
+        if (error) throw error;
+        mediaUrl = data.url;
         mediaType = 'image';
       }
 
-      // Upload new video if selected
+      // Upload new video to R2 if selected
       if (videoFile) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
+        const formData = new FormData();
+        formData.append('file', videoFile);
 
-        const fileExt = videoFile.name.split('.').pop()?.toLowerCase();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('feed-media')
-          .upload(fileName, videoFile);
+        const { data, error } = await supabase.functions.invoke('upload-to-r2', {
+          body: formData,
+        });
 
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
-        mediaUrl = publicUrl;
+        if (error) throw error;
+        mediaUrl = data.url;
         mediaType = 'video';
       }
 
