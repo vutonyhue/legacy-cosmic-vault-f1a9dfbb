@@ -9,9 +9,14 @@ export async function uploadFileToR2(
   const safeName = file.name.replace(/\s+/g, "-").toLowerCase();
   const fileName = `${folder}/${userId}-${crypto.randomUUID()}-${safeName}`;
 
-  // Convert file sang base64
+  // Convert file sang base64 (browser-compatible)
   const arrayBuffer = await file.arrayBuffer();
-  const base64 = Buffer.from(arrayBuffer).toString('base64');
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64 = btoa(binary);
 
   const params = new URLSearchParams({
     fileName,
