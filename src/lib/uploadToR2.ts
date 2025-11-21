@@ -7,16 +7,20 @@ export async function uploadFileToR2(
 ) {
   // Tạo tên file an toàn
   const safeName = file.name.replace(/\s+/g, "-").toLowerCase();
-  const filename = `${folder}/${userId}-${crypto.randomUUID()}-${safeName}`;
+  const fileName = `${folder}/${userId}-${crypto.randomUUID()}-${safeName}`;
+
+  // Convert file sang base64
+  const arrayBuffer = await file.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString('base64');
 
   const params = new URLSearchParams({
-    filename,
-    contentType: file.type || "application/octet-stream",
+    fileName,
+    fileType: file.type || "application/octet-stream",
   });
 
   const res = await fetch(`/api/upload-to-r2?${params.toString()}`, {
     method: "POST",
-    body: file, // gửi RAW file, không dùng FormData
+    body: base64,
   });
 
   if (!res.ok) {
@@ -25,5 +29,5 @@ export async function uploadFileToR2(
   }
 
   const json = await res.json();
-  return json.publicUrl as string;
+  return json.url as string;
 }

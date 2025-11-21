@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 
     await client.send(upload);
 
-    const publicUrl = `${process.env.R2_PUBLIC_BASE}/${fileName}`;
+    const publicUrl = `${process.env.R2_PUBLIC_BASE_URL}/${fileName}`;
 
     return res.status(200).json({ url: publicUrl });
 
