@@ -76,15 +76,15 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
       if (imageFile) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
-        
+
         const fileExt = imageFile.name.split('.').pop()?.toLowerCase();
         const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        const { error: uploadError, data } = await supabase.storage
-          .from('posts')
+        const { error: uploadError } = await supabase.storage
+          .from('feed-media')
           .upload(fileName, imageFile);
 
         if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
         imageUrl = publicUrl;
       }
 
@@ -92,15 +92,15 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
       if (videoFile) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
-        
+
         const fileExt = videoFile.name.split('.').pop()?.toLowerCase();
         const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
-          .from('videos')
+          .from('feed-media')
           .upload(fileName, videoFile);
 
         if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
         videoUrl = publicUrl;
       }
 

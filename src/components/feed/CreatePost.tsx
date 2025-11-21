@@ -66,8 +66,8 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      let imageUrl = null;
-      let videoUrl = null;
+      let mediaUrl = null;
+      let mediaType = null;
 
       // Upload image if present
       if (image) {
@@ -75,16 +75,17 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
         const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('posts')
+          .from('feed-media')
           .upload(fileName, image);
 
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
-          .from('posts')
+          .from('feed-media')
           .getPublicUrl(fileName);
         
-        imageUrl = publicUrl;
+        mediaUrl = publicUrl;
+        mediaType = 'image';
       }
 
       // Upload video if present
@@ -93,23 +94,24 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
         const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('videos')
+          .from('feed-media')
           .upload(fileName, video);
 
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
-          .from('videos')
+          .from('feed-media')
           .getPublicUrl(fileName);
         
-        videoUrl = publicUrl;
+        mediaUrl = publicUrl;
+        mediaType = 'video';
       }
 
       const { error } = await supabase.from('posts').insert({
         user_id: user.id,
         content: content.trim() || '',
-        image_url: imageUrl,
-        video_url: videoUrl,
+        media_url: mediaUrl,
+        media_type: mediaType,
       });
 
       if (error) throw error;
