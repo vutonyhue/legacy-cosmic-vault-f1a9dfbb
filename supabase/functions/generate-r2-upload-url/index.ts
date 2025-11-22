@@ -1,5 +1,5 @@
-import { S3Client, PutObjectCommand } from "npm:@aws-sdk/client-s3@3.937.0";
-import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.937.0";
+import { S3Client, PutObjectCommand } from "https://esm.sh/@aws-sdk/client-s3@3.937.0";
+import { getSignedUrl } from "https://esm.sh/@aws-sdk/s3-request-presigner@3.937.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error generating upload URL:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
