@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ImagePlus, Video, X, Loader2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { uploadFileToR2 } from '@/lib/uploadToR2';
 
 interface CreatePostProps {
@@ -19,6 +20,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -37,8 +39,8 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) {
-        toast.error('Video must be less than 50MB');
+      if (file.size > 500 * 1024 * 1024) {
+        toast.error('Video must be less than 500MB');
         return;
       }
       setVideo(file);
@@ -63,6 +65,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
     }
 
     setLoading(true);
+    setUploadProgress(0);
     try {
       const {
         data: { user },
@@ -72,15 +75,19 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       let mediaUrl: string | null = null;
       let mediaType: 'image' | 'video' | null = null;
 
-      // 🔹 Upload image if present → Cloudflare R2
+      // 🔹 Upload image if present → Cloudflare R2 with progress
       if (image) {
-        mediaUrl = await uploadFileToR2(image, user.id, 'posts');
+        mediaUrl = await uploadFileToR2(image, user.id, 'posts', (progress) => {
+          setUploadProgress(progress);
+        });
         mediaType = 'image';
       }
 
-      // 🔹 Upload video if present → Cloudflare R2
+      // 🔹 Upload video if present → Cloudflare R2 with progress
       if (video) {
-        mediaUrl = await uploadFileToR2(video, user.id, 'posts');
+        mediaUrl = await uploadFileToR2(video, user.id, 'posts', (progress) => {
+          setUploadProgress(progress);
+        });
         mediaType = 'video';
       }
 
@@ -98,6 +105,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       setImagePreview(null);
       setVideo(null);
       setVideoPreview(null);
+      setUploadProgress(0);
       toast.success('Post created!');
       onPostCreated();
     } catch (error: any) {
@@ -105,6 +113,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       toast.error(error.message || 'Failed to create post');
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -152,6 +161,16 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
             >
               <X className="w-4 h-4" />
             </Button>
+          </div>
+        )}
+
+        {loading && uploadProgress > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Uploading...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <Progress value={uploadProgress} className="w-full" />
           </div>
         )}
 

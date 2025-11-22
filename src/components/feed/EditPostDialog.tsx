@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadFileToR2 } from '@/lib/uploadToR2';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Image, Video, X } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface EditPostDialogProps {
   post: {
@@ -27,6 +29,7 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
   const [imagePreview, setImagePreview] = useState<string | null>(initialImagePreview);
   const [videoPreview, setVideoPreview] = useState<string | null>(initialVideoPreview);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -41,8 +44,8 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) {
-        toast.error('Video size must be less than 50MB');
+      if (file.size > 500 * 1024 * 1024) {
+        toast.error('Video size must be less than 500MB');
         return;
       }
       setVideoFile(file);
@@ -70,7 +73,11 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
     }
 
     setLoading(true);
+    setUploadProgress(0);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
       // Determine current media based on previews
       let mediaUrl: string | null =
         imagePreview && !videoPreview ? imagePreview :
@@ -81,37 +88,19 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
         videoPreview && !imagePreview ? 'video' :
         null;
 
-      // Upload new image if selected
+      // Upload new image if selected → Cloudflare R2 with progress
       if (imageFile) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        const fileExt = imageFile.name.split('.').pop()?.toLowerCase();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('feed-media')
-          .upload(fileName, imageFile);
-
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
-        mediaUrl = publicUrl;
+        mediaUrl = await uploadFileToR2(imageFile, user.id, 'posts', (progress) => {
+          setUploadProgress(progress);
+        });
         mediaType = 'image';
       }
 
-      // Upload new video if selected
+      // Upload new video if selected → Cloudflare R2 with progress
       if (videoFile) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        const fileExt = videoFile.name.split('.').pop()?.toLowerCase();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('feed-media')
-          .upload(fileName, videoFile);
-
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('feed-media').getPublicUrl(fileName);
-        mediaUrl = publicUrl;
+        mediaUrl = await uploadFileToR2(videoFile, user.id, 'posts', (progress) => {
+          setUploadProgress(progress);
+        });
         mediaType = 'video';
       }
 
@@ -133,6 +122,7 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
       toast.error('Failed to update post');
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -177,6 +167,16 @@ export const EditPostDialog = ({ post, isOpen, onClose, onPostUpdated }: EditPos
               >
                 <X className="w-4 h-4" />
               </Button>
+            </div>
+          )}
+
+          {loading && uploadProgress > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Uploading...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="w-full" />
             </div>
           )}
 
