@@ -37,8 +37,8 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 100 * 1024 * 1024) {
-        toast.error('Video must be less than 100MB');
+      if (file.size > 3 * 1024 * 1024) {
+        toast.error('Video must be less than 3MB due to upload limitations');
         return;
       }
       setVideo(file);
